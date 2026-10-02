@@ -20,9 +20,6 @@ public record ProductRequestDTO(
         @Size(max = 500, message = "A descrição deve ter no máximo 500 caracteres")
         String description,
 
-        @NotNull(message = "O status ativo/inativo é obrigatório")
-        Boolean active,
-
         @NotNull(message = "O preço de venda é obrigatório")
         @PositiveOrZero(message = "O preço de venda não pode ser negativo")
         BigDecimal price,

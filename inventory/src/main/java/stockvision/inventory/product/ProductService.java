@@ -31,6 +31,11 @@ public class ProductService {
 
     @Transactional
     public ProductResponseDTO createProduct(ProductRequestDTO dto) {
+
+        if(productRepository.existsBySku(dto.sku())){
+            throw new DuplicateSkuException("Ja existe produto com esse SKU: " + dto.sku());
+        }
+
         Product product = productMapper.toEntity(dto);
         Product saved = productRepository.save(product);
         return productMapper.toResponseDTO(saved);
@@ -38,6 +43,10 @@ public class ProductService {
 
     @Transactional
     public ProductResponseDTO updateProduct(Long id, ProductRequestDTO dto) {
+
+        if(productRepository.existsBySku(dto.sku())){
+            throw new DuplicateSkuException("Ja existe produto com esse SKU: " + dto.sku());
+        }
 
         Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com id: " + id));
 
