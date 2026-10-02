@@ -10,6 +10,8 @@ import stockvision.inventory.product.dto.ProductResponseDTO;
 import stockvision.inventory.shared.exception.DuplicateSkuException;
 import stockvision.inventory.shared.exception.ResourceNotFoundException;
 
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +67,15 @@ public class ProductService {
 
         product.setActive(true);
         productRepository.save(product);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponseDTO> searchBySKU(String sku, Pageable pageable) {
+        if (sku == null || sku.isBlank()) {
+            return productRepository.findAll(pageable).map(productMapper::toResponseDTO);
+        }
+
+        return productRepository.findBySkuContainingIgnoreCase(sku, pageable).map(productMapper::toResponseDTO);
     }
 
 

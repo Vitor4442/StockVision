@@ -29,6 +29,11 @@ public class ProductController {
         return ResponseEntity.ok(productService.findById(id));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<Page<ProductResponseDTO>> searchSku(@RequestParam(name = "sku", required = false) String sku, Pageable pageable){
+        return  ResponseEntity.ok(productService.searchBySKU(sku, pageable));
+    }
+
     @PostMapping
     public ResponseEntity<ProductResponseDTO> create(@Valid @RequestBody ProductRequestDTO dto) {
         ProductResponseDTO created = productService.createProduct(dto);
