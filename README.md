@@ -15,7 +15,7 @@ Microserviço responsável pelo gerenciamento de estoque e registro de movimenta
 
 ## Arquitetura
 
-O StockVision utiliza uma arquitetura baseada em **microsserviços e comunicação orientada a eventos**.
+O StockVision utiliza uma arquitetura baseada em **microsserviços e comunicação orientada a eventos** onde cada modulo foi separado por diferente dominios da aplicação.
 
 ![Arquitetura do StockVision](docs/architecture/stockvision-architecture.png)
 
