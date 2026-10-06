@@ -1,6 +1,8 @@
 package stockvision.inventory.stock;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 import stockvision.inventory.location.Location;
 import stockvision.inventory.product.Product;
@@ -33,4 +35,12 @@ public class Stock {
 
     @Version
     private Long version;
+
+    public void removeStock(@NotNull(message = "A quantidade é obrigatória") @Positive(message = "A quantidade deve ser maior que zero") BigDecimal quantityRemove) {
+        this.quantity = this.quantity.subtract(quantityRemove);
+    }
+
+    public void addStock(@NotNull(message = "A quantidade é obrigatória") @Positive(message = "A quantidade deve ser maior que zero") BigDecimal quantityAdd) {
+        this.quantity = this.quantity.add(quantityAdd);
+    }
 }
