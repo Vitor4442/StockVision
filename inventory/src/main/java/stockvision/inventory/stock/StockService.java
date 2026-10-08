@@ -3,6 +3,8 @@ package stockvision.inventory.stock;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
@@ -18,6 +20,7 @@ import stockvision.inventory.stock.dto.StockRequestDTO;
 import stockvision.inventory.stock.dto.StockResponseDTO;
 import stockvision.inventory.stock.dto.UpdateStockQuantityDTO;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -29,6 +32,12 @@ public class StockService {
     private final StockMapper stockMapper;
     private final LocationRepository locationRepository;
     private final ProductRepository productRepository;
+
+    @Transactional(readOnly = true)
+    public Page<StockResponseDTO> findAll(Pageable pageable) {
+        return stockRepository.findAll(pageable)
+                .map(stockMapper::toDto);
+    }
 
     @Transactional(readOnly = true)
     public StockResponseDTO getByProductAndLocation(Long productId, Long locationId) {

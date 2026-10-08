@@ -2,6 +2,10 @@ package stockvision.inventory.stock;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,19 +32,14 @@ public class StockController {
         return ResponseEntity.ok(stockService.getByLocation(locationId));
     }
 
+    @GetMapping
+    public ResponseEntity<Page<StockResponseDTO>> getStockAll( @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+        return ResponseEntity.ok(stockService.findAll(pageable));
+    }
+
     @PostMapping
     public ResponseEntity<StockResponseDTO> create(@RequestBody @Valid StockRequestDTO dto) {
         StockResponseDTO created = stockService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
-
-    @PatchMapping("/products/{productId}/locations/{locationId}/add")
-    public ResponseEntity<StockResponseDTO> addQuantity(@PathVariable Long productId, @PathVariable Long locationId, @RequestBody @Valid UpdateStockQuantityDTO dto) {
-        return ResponseEntity.ok(stockService.addQuantity(productId, locationId, dto));
-    }
-
-    @PatchMapping("/products/{productId}/locations/{locationId}/remove")
-    public ResponseEntity<StockResponseDTO> removeQuantity(@PathVariable Long productId, @PathVariable Long locationId, @RequestBody @Valid UpdateStockQuantityDTO dto) {
-        return ResponseEntity.ok(stockService.removeQuantity(productId, locationId, dto));
     }
 }
