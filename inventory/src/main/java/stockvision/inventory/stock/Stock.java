@@ -43,4 +43,8 @@ public class Stock {
     public void addStock(@NotNull(message = "A quantidade é obrigatória") @Positive(message = "A quantidade deve ser maior que zero") BigDecimal quantityAdd) {
         this.quantity = this.quantity.add(quantityAdd);
     }
+
+    public void adjustedStock(@NotNull(message = "A quantidade é obrigatória") @Positive(message = "A quantidade deve ser maior que zero") BigDecimal quantity) {
+        this.quantity = quantity;
+    }
 }

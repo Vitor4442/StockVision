@@ -27,4 +27,10 @@ public class StockMovementController {
         stockMovementService.AddQuantity(stockMovementRequestDTO);
         return ResponseEntity.accepted().build();
     }
+
+    @PostMapping("/adjusted")
+    public ResponseEntity<Void> adjustedStock (@RequestBody @Valid StockMovementRequestDTO stockMovementRequestDTO){
+        stockMovementService.AdjustedQuantity(stockMovementRequestDTO);
+        return ResponseEntity.accepted().build();
+    }
 }
