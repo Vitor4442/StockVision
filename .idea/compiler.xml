@@ -22,7 +22,6 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.46/lombok-1.18.46.jar" />
         </processorPath>
-        <module name="company" />
       </profile>
       <profile name="Annotation profile for auth" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -35,6 +34,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="company" target="21" />
       <module name="notification" target="21" />
     </bytecodeTargetLevel>
   </component>
