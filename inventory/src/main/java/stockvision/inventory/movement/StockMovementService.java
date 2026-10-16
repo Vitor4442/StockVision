@@ -9,6 +9,8 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import stockvision.inventory.event.StockEventPublisher;
+import stockvision.inventory.event.StockLowEvent;
 import stockvision.inventory.location.Location;
 import stockvision.inventory.location.LocationRepository;
 import stockvision.inventory.movement.dto.StockMovementRequestDTO;
@@ -31,7 +33,9 @@ public class StockMovementService {
     private final ProductRepository productRepository;
     private final LocationRepository locationRepository;
     private final StockRepository stockRepository;
+    private final StockEventPublisher stockEventPublisher;
     private final StockMapper stockMapper;
+
 
     @Retryable(
             retryFor = { ObjectOptimisticLockingFailureException.class },
@@ -44,6 +48,7 @@ public class StockMovementService {
         Stock stock = stockRepository.findByProductIdAndLocationId(stockMovementRequestDTO.productId(), stockMovementRequestDTO.locationId()).orElseThrow(() -> new RuntimeException("Estoque não encontrado"));
         stock.removeStock(stockMovementRequestDTO.quantity());
         saveWithOptimisticLockCheck(stock);
+        verifyStock(stock);
         StockMovement stockMovement = mapper.toEntity(stockMovementRequestDTO);
         stockMovement.setSource(StockMovementSource.MANUAL);
         stockMovement.setType(StockMovementType.EXIT);
@@ -103,6 +108,20 @@ public class StockMovementService {
             throw new ResourceNotFoundException(
                     "Product not found: " + stockMovementRequestDTO.productId()
             );
+        }
+    }
+
+    private void verifyStock(Stock stock) {
+        if (stock.getQuantity().compareTo(stock.getMinimumQuantity()) <= 0) {
+
+            StockLowEvent event = new StockLowEvent(
+                    stock.getProduct().getId(),
+                    stock.getLocation().getId(),
+                    stock.getQuantity(),
+                    stock.getMinimumQuantity()
+            );
+
+            stockEventPublisher.publishStockLow(event);
         }
     }
 
