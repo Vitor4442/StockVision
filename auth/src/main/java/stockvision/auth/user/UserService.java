@@ -3,6 +3,7 @@ package stockvision.auth.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,5 +44,19 @@ public class UserService {
         User savedUser = userRepository.save(user);
 
         return UserResponse.from(savedUser);
+    }
+
+    @Transactional
+    public void toggleNotification() {
+        String Id = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        User user = userRepository.findById(Long.valueOf(Id))
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuário não encontrado"
+                ));
+
+        user.changeNotification();
     }
 }
