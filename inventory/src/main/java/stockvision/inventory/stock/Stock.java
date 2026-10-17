@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.*;
 import stockvision.inventory.location.Location;
 import stockvision.inventory.product.Product;
+import stockvision.inventory.shared.exception.InsufficientStockException;
 
 import java.math.BigDecimal;
 
@@ -40,6 +41,9 @@ public class Stock {
     private Long version;
 
     public void removeStock(@NotNull(message = "A quantidade é obrigatória") @Positive(message = "A quantidade deve ser maior que zero") BigDecimal quantityRemove) {
+        if (this.quantity.subtract(quantityRemove).compareTo(BigDecimal.ZERO) < 0) {
+            throw new InsufficientStockException("A quantidade solicitada para movimentação é superior ao estoque disponível.");
+        }
         this.quantity = this.quantity.subtract(quantityRemove);
     }
 

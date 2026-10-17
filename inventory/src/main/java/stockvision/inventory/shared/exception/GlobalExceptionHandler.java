@@ -48,4 +48,16 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
+
+    @ExceptionHandler({InsufficientStockException.class})
+    public ResponseEntity<Map<String, Object>> insufficientStock(InsufficientStockException ex, HttpServletRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.CONFLICT.value()); // HTTP 409 Conflict
+        body.put("error", "A quantidade solicitada para movimentação é superior ao estoque disponível.");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getRequestURI());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
 }
