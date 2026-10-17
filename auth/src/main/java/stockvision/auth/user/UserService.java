@@ -8,11 +8,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import stockvision.auth.user.User;
-import stockvision.auth.user.UserRepository;
 import stockvision.auth.user.dto.RegisterRequest;
 import stockvision.auth.user.dto.UserResponse;
 
+import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -58,5 +57,13 @@ public class UserService {
                 ));
 
         user.changeNotification();
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> findNotificationRecipientEmails() {
+        return userRepository.findByNotificationTrue()
+                .stream()
+                .map(User::getEmail)
+                .toList();
     }
 }

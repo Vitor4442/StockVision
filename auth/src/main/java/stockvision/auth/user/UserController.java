@@ -12,6 +12,7 @@ import stockvision.auth.user.dto.RegisterRequest;
 import stockvision.auth.user.dto.UserResponse;
 import org.springframework.web.bind.annotation.*;
 
+//todo separar a logica do auth com users
 @RestController
 @RequestMapping("/v1/auth")
 @RequiredArgsConstructor
