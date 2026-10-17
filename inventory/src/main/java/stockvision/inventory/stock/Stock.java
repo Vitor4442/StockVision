@@ -33,6 +33,9 @@ public class Stock {
     @Column(nullable = false, precision = 38, scale = 2)
     private BigDecimal quantity;
 
+    @Column(nullable = false, precision = 38, scale = 2)
+    private BigDecimal minimumQuantity;
+
     @Version
     private Long version;
 

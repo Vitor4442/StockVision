@@ -13,7 +13,6 @@
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/company/pom.xml" />
-        <option value="$PROJECT_DIR$/notification/pom.xml" />
       </set>
     </option>
   </component>

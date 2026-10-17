@@ -1,0 +1,2 @@
+ALTER TABLE stocks
+    ADD COLUMN minimum_quantity DECIMAL(38,2) NOT NULL DEFAULT 0;

@@ -3,6 +3,7 @@ package stockvision.auth.user;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import stockvision.auth.shared.security.AuthService;
 import stockvision.auth.user.dto.LoginRequest;
@@ -11,6 +12,7 @@ import stockvision.auth.user.dto.RegisterRequest;
 import stockvision.auth.user.dto.UserResponse;
 import org.springframework.web.bind.annotation.*;
 
+//todo separar a logica do auth com users
 @RestController
 @RequestMapping("/v1/auth")
 @RequiredArgsConstructor
@@ -29,6 +31,12 @@ public class UserController {
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    @PatchMapping("/changeNotifications")
+    public ResponseEntity<Void> toggleNotification() {
+        userService.toggleNotification();
+        return ResponseEntity.noContent().build();
     }
 
 }

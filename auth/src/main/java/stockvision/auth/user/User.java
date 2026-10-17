@@ -4,6 +4,7 @@ package stockvision.auth.user;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -36,12 +37,14 @@ public class User {
     @Column(nullable = false)
     private boolean owner = true;
 
-    @Column(name = "created_at", nullable = false,
-            updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
+
+    @Column(nullable = false)
+    private boolean notification = false;
 
     @PrePersist
     protected void onCreate() {
@@ -53,5 +56,9 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = OffsetDateTime.now();
+    }
+
+    public void changeNotification() {
+        this.notification = !this.notification; // Inverte o valor booleano
     }
 }
