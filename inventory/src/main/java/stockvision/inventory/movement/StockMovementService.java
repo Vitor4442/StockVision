@@ -23,6 +23,8 @@ import stockvision.inventory.stock.StockRepository;
 import stockvision.inventory.stock.dto.StockResponseDTO;
 import stockvision.inventory.stock.dto.UpdateStockQuantityDTO;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -113,8 +115,8 @@ public class StockMovementService {
 
     private void verifyStock(Stock stock) {
         if (stock.getQuantity().compareTo(stock.getMinimumQuantity()) <= 0) {
-
             StockLowEvent event = new StockLowEvent(
+                    UUID.randomUUID(),
                     stock.getProduct().getId(),
                     stock.getLocation().getId(),
                     stock.getQuantity(),
