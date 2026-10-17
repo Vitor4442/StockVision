@@ -5,7 +5,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import stockvision.notification.client.AuthNotificationClient;
+import stockvision.notification.client.UsersNotificationClient;
 import stockvision.notification.event.StockLowEvent;
 
 @Service
@@ -13,13 +13,13 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final String senderAddress;
-    private final AuthNotificationClient authNotificationClient;
+    private final UsersNotificationClient usersNotificationClient;
     private final String internalToken;
 
-    public EmailService(JavaMailSender mailSender, AuthNotificationClient authNotificationClient, @Value("${app.mail.from}") String senderAddress, @Value("${app.internal.token:}") String internalToken) {
+    public EmailService(JavaMailSender mailSender, UsersNotificationClient usersNotificationClient, @Value("${app.mail.from}") String senderAddress, @Value("${app.internal.token:}") String internalToken) {
         this.mailSender = mailSender;
         this.senderAddress = senderAddress;
-        this.authNotificationClient = authNotificationClient;
+        this.usersNotificationClient = usersNotificationClient;
         this.internalToken = internalToken;
     }
 
@@ -35,7 +35,7 @@ public class EmailService {
     }
 
     private String[] findRecipients() {
-        return authNotificationClient.findRecipients(internalToken);
+        return usersNotificationClient.findRecipients(internalToken);
     }
 
     private void sendStockLowEmail(StockLowEvent event, String recipient) {

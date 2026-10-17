@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>StockVision</groupId>
-    <artifactId>auth</artifactId>
+    <artifactId>users</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>auth</name>
-    <description>auth</description>
+    <name>users</name>
+    <description>Users and authentication service</description>
     <url/>
     <licenses>
         <license/>
