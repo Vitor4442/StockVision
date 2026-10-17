@@ -49,6 +49,15 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
+  # Serviço de email para desenvolvimento (Mailpit)
+  mailpit:
+    image: axllent/mailpit
+    container_name: stockvision-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 
 
 volumes:
