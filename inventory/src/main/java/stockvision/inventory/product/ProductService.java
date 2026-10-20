@@ -1,5 +1,6 @@
 package stockvision.inventory.product;
 
+import com.google.zxing.WriterException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,9 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 import stockvision.inventory.product.dto.ProductRequestDTO;
 import stockvision.inventory.product.dto.ProductResponseDTO;
 import stockvision.inventory.shared.exception.DuplicateSkuException;
+import stockvision.inventory.shared.exception.NotFoundTrackingCode;
 import stockvision.inventory.shared.exception.ResourceNotFoundException;
 
-import java.util.List;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 
 @Service
@@ -19,6 +24,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final BarcodeService barcodeService;
 
     @Transactional(readOnly = true)
     public Page<ProductResponseDTO> findAll(Pageable pageable) {
@@ -82,6 +88,21 @@ public class ProductService {
     public String generateCode(Long id){
         Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com id: " + id));
         return product.generateTrackingCode();
+    }
+
+    public byte[] getBarcode(Long id) throws WriterException, IOException {
+        Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com id: " + id));
+        if(product.getTrackingCode() == null){
+            new NotFoundTrackingCode("Produto não possui código, por favor gere um código");
+        }
+        String trackingCode = product.getTrackingCode();
+
+        BufferedImage image = barcodeService.generateCode(trackingCode);
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", output);
+
+        return output.toByteArray();
     }
 
 

@@ -1,13 +1,17 @@
 package stockvision.inventory.product;
 
+import com.google.zxing.WriterException;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import stockvision.inventory.product.dto.ProductRequestDTO;
 import stockvision.inventory.product.dto.ProductResponseDTO;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/v1/products")
@@ -54,5 +58,10 @@ public class ProductController {
     @PostMapping("/generateCode/{id}")
     public ResponseEntity<String> generateCode(@PathVariable Long id){
         return ResponseEntity.ok(productService.generateCode(id));
+    }
+
+    @GetMapping(value = "/barcode/{id}", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getBarcode(@PathVariable Long id) throws WriterException, IOException {
+        return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(productService.getBarcode(id));
     }
 }
