@@ -8,6 +8,7 @@ import stockvision.inventory.location.Location;
 import stockvision.inventory.product.Product;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Entity
 @Table(name = "stocks")
@@ -36,6 +37,9 @@ public class Stock {
     @Column(nullable = false, precision = 38, scale = 2)
     private BigDecimal minimumQuantity;
 
+    @Column(unique = true)
+    private String trackingCode;
+
     @Version
     private Long version;
 
@@ -49,5 +53,18 @@ public class Stock {
 
     public void adjustedStock(@NotNull(message = "A quantidade é obrigatória") @Positive(message = "A quantidade deve ser maior que zero") BigDecimal quantity) {
         this.quantity = quantity;
+    }
+
+    public String generateTrackingCode() {
+        if (trackingCode == null) {
+
+            trackingCode = "ORD-" + UUID.randomUUID()
+                    .toString()
+                    .replace("-", "")
+                    .substring(0, 12)
+                    .toUpperCase();
+        }
+
+        return trackingCode;
     }
 }

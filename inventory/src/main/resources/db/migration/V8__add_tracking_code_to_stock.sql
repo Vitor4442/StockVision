@@ -1,0 +1,2 @@
+ALTER TABLE stocks
+    ADD COLUMN tracking_code VARCHAR(255) UNIQUE;

@@ -1,16 +1,10 @@
 package stockvision.inventory.stock;
 
-import jakarta.persistence.EntityNotFoundException;
+import com.google.zxing.WriterException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Recover;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import stockvision.inventory.location.Location;
 import stockvision.inventory.location.LocationRepository;
@@ -20,21 +14,22 @@ import stockvision.inventory.shared.exception.DuplicateStockProductAndLocation;
 import stockvision.inventory.shared.exception.ResourceNotFoundException;
 import stockvision.inventory.stock.dto.StockRequestDTO;
 import stockvision.inventory.stock.dto.StockResponseDTO;
-import stockvision.inventory.stock.dto.UpdateStockQuantityDTO;
 
-import java.util.Collections;
-import java.util.DuplicateFormatFlagsException;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class StockService {
 
     private final StockRepository stockRepository;
     private final StockMapper stockMapper;
     private final LocationRepository locationRepository;
     private final ProductRepository productRepository;
+    private final BarcodeService barcodeService;
 
     @Transactional(readOnly = true)
     public Page<StockResponseDTO> findAll(Pageable pageable) {
@@ -46,6 +41,35 @@ public class StockService {
     public StockResponseDTO getByProductAndLocation(Long productId, Long locationId) {
         Stock stock = findStock(productId, locationId);
         return stockMapper.toDto(stock);
+    }
+
+    @Transactional(readOnly = true)
+    public StockResponseDTO getByTrackingCode(String trackingCode) {
+        Stock stock = stockRepository.findByTrackingCode(trackingCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Estoque não encontrado para o código informado."));
+        return stockMapper.toDto(stock);
+    }
+
+    @Transactional
+    public byte[] generateBarcode(Long stockId) {
+        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new ResourceNotFoundException("Estoque não encontrado com id: " + stockId));
+
+        if (stock.getTrackingCode() == null) {
+            stock.generateTrackingCode();
+            stockRepository.save(stock);
+        }
+
+        try {
+            BufferedImage barcode = barcodeService.generateCode(stock.getTrackingCode());
+            try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+                if (!ImageIO.write(barcode, "PNG", output)) {
+                    throw new IllegalStateException("Não foi possível codificar o código de barras como PNG.");
+                }
+                return output.toByteArray();
+            }
+        } catch (WriterException | IOException exception) {
+            throw new IllegalStateException("Não foi possível gerar o código de barras do estoque.", exception);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -68,6 +92,7 @@ public class StockService {
         Stock stock = stockMapper.toEntity(dto);
         stock.setProduct(product);
         stock.setLocation(location);
+        stock.generateTrackingCode();
         Stock savedStock = stockRepository.save(stock);
         return stockMapper.toDto(savedStock);
     }
