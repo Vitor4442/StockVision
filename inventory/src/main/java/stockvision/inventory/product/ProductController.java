@@ -50,4 +50,9 @@ public class ProductController {
         productService.activateProduct(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/generateCode/{id}")
+    public ResponseEntity<String> generateCode(@PathVariable Long id){
+        return ResponseEntity.ok(productService.generateCode(id));
+    }
 }

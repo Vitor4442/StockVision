@@ -78,5 +78,11 @@ public class ProductService {
         return productRepository.findBySkuContainingIgnoreCase(sku, pageable).map(productMapper::toResponseDTO);
     }
 
+    @Transactional
+    public String generateCode(Long id){
+        Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com id: " + id));
+        return product.generateTrackingCode();
+    }
+
 
 }
