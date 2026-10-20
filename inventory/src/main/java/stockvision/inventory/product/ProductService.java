@@ -24,7 +24,6 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
-    private final BarcodeService barcodeService;
 
     @Transactional(readOnly = true)
     public Page<ProductResponseDTO> findAll(Pageable pageable) {
@@ -82,42 +81,6 @@ public class ProductService {
         }
 
         return productRepository.findBySkuContainingIgnoreCase(sku, pageable).map(productMapper::toResponseDTO);
-    }
-
-    @Transactional
-    public String generateCode(Long id){
-        Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com id: " + id));
-        return product.generateTrackingCode();
-    }
-
-    public byte[] getBarcode(Long id) throws WriterException, IOException {
-        Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com id: " + id));
-        if(product.getTrackingCode() == null){
-            new NotFoundTrackingCode("Produto não possui código, por favor gere um código");
-        }
-        String trackingCode = product.getTrackingCode();
-
-        BufferedImage image = barcodeService.generateCode(trackingCode);
-
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        ImageIO.write(image, "png", output);
-
-        return output.toByteArray();
-    }
-
-    public byte[] getQrCode(Long id) throws WriterException, IOException {
-        Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com id: " + id));
-        if(product.getTrackingCode() == null){
-            new NotFoundTrackingCode("Produto não possui código, por favor gere um código");
-        }
-        String trackingCode = product.getTrackingCode();
-
-        BufferedImage image = barcodeService.generateQrCode(trackingCode);
-
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        ImageIO.write(image, "png", output);
-
-        return output.toByteArray();
     }
 
 

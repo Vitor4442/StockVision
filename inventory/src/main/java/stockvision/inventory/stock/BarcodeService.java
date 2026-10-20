@@ -1,4 +1,4 @@
-package stockvision.inventory.product;
+package stockvision.inventory.stock;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;

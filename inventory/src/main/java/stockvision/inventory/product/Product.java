@@ -29,9 +29,6 @@ public class Product {
     @Column(nullable = false, length = 50, unique = true)
     private String sku;
 
-    @Column(unique = true)
-    private String trackingCode;
-
     @Column(length = 500)
     private String description;
 
@@ -47,18 +44,4 @@ public class Product {
     @PositiveOrZero
     @Column(name = "cost_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal costPrice;
-
-    public String generateTrackingCode() {
-        if (trackingCode == null) {
-
-            trackingCode = "ORD-" + UUID.randomUUID()
-                    .toString()
-                    .replace("-", "")
-                    .substring(0, 12)
-                    .toUpperCase();
-        }
-
-        return trackingCode;
-    }
-
 }
