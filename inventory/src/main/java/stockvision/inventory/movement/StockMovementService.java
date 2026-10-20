@@ -135,7 +135,7 @@ public class StockMovementService {
                 .location(stock.getLocation())
                 .type(type)
                 .quantity(request.quantity())
-                .source(StockMovementSource.MANUAL)
+                .source(StockMovementSource.CAMERA)
                 .referenceId(request.referenceId())
                 .build();
     }
