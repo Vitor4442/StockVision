@@ -1,5 +1,6 @@
 package stockvision.inventory.product;
 
+import com.google.zxing.WriterException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,9 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 import stockvision.inventory.product.dto.ProductRequestDTO;
 import stockvision.inventory.product.dto.ProductResponseDTO;
 import stockvision.inventory.shared.exception.DuplicateSkuException;
+import stockvision.inventory.shared.exception.NotFoundTrackingCode;
 import stockvision.inventory.shared.exception.ResourceNotFoundException;
 
-import java.util.List;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 
 @Service

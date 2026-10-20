@@ -14,6 +14,7 @@ import stockvision.inventory.event.StockLowEvent;
 import stockvision.inventory.location.Location;
 import stockvision.inventory.location.LocationRepository;
 import stockvision.inventory.movement.dto.StockMovementRequestDTO;
+import stockvision.inventory.movement.dto.StockMovementTrackingCodeRequestDTO;
 import stockvision.inventory.product.Product;
 import stockvision.inventory.product.ProductRepository;
 import stockvision.inventory.shared.exception.ResourceNotFoundException;
@@ -77,6 +78,34 @@ public class StockMovementService {
         stockMovement.setLocation(setLocation(stockMovementRequestDTO));
         stockMovementRepository.save(stockMovement);
     }
+
+    @Retryable(
+            retryFor = { ObjectOptimisticLockingFailureException.class },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 100, multiplier = 2)
+    )
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void removeQuantityByTrackingCode(String trackingCode, StockMovementTrackingCodeRequestDTO request) {
+        Stock stock = findByTrackingCode(trackingCode);
+        stock.removeStock(request.quantity());
+        saveWithOptimisticLockCheck(stock);
+        verifyStock(stock);
+        stockMovementRepository.save(createTrackingCodeMovement(stock, request, StockMovementType.EXIT));
+    }
+
+    @Retryable(
+            retryFor = { ObjectOptimisticLockingFailureException.class },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 100, multiplier = 2)
+    )
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void addQuantityByTrackingCode(String trackingCode, StockMovementTrackingCodeRequestDTO request) {
+        Stock stock = findByTrackingCode(trackingCode);
+        stock.addStock(request.quantity());
+        saveWithOptimisticLockCheck(stock);
+        stockMovementRepository.save(createTrackingCodeMovement(stock, request, StockMovementType.ENTRY));
+    }
+
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void AdjustedQuantity(StockMovementRequestDTO stockMovementRequestDTO){
         validate(stockMovementRequestDTO);
@@ -89,6 +118,26 @@ public class StockMovementService {
         stockMovement.setProduct(setProduct(stockMovementRequestDTO));
         stockMovement.setLocation(setLocation(stockMovementRequestDTO));
         stockMovementRepository.save(stockMovement);
+    }
+
+    private Stock findByTrackingCode(String trackingCode) {
+        return stockRepository.findByTrackingCode(trackingCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Estoque não encontrado para o código informado."));
+    }
+
+    private StockMovement createTrackingCodeMovement(
+            Stock stock,
+            StockMovementTrackingCodeRequestDTO request,
+            StockMovementType type
+    ) {
+        return StockMovement.builder()
+                .product(stock.getProduct())
+                .location(stock.getLocation())
+                .type(type)
+                .quantity(request.quantity())
+                .source(StockMovementSource.CAMERA)
+                .referenceId(request.referenceId())
+                .build();
     }
 
     private Product setProduct(StockMovementRequestDTO stockMovementRequestDTO) {

@@ -3,11 +3,9 @@ package stockvision.inventory.movement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import stockvision.inventory.movement.dto.StockMovementRequestDTO;
+import stockvision.inventory.movement.dto.StockMovementTrackingCodeRequestDTO;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,6 +23,18 @@ public class StockMovementController {
     @PostMapping("/addStock")
     public ResponseEntity<Void> addStock (@RequestBody @Valid StockMovementRequestDTO stockMovementRequestDTO){
         stockMovementService.AddQuantity(stockMovementRequestDTO);
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/tracking/{trackingCode}/remove")
+    public ResponseEntity<Void> removeStockByTrackingCode(@PathVariable String trackingCode, @RequestBody @Valid StockMovementTrackingCodeRequestDTO request) {
+        stockMovementService.removeQuantityByTrackingCode(trackingCode, request);
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/tracking/{trackingCode}/add")
+    public ResponseEntity<Void> addStockByTrackingCode(@PathVariable String trackingCode, @RequestBody @Valid StockMovementTrackingCodeRequestDTO request) {
+        stockMovementService.addQuantityByTrackingCode(trackingCode, request);
         return ResponseEntity.accepted().build();
     }
 

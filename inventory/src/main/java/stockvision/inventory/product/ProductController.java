@@ -1,13 +1,18 @@
 package stockvision.inventory.product;
 
+import com.google.zxing.WriterException;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.*;
 import stockvision.inventory.product.dto.ProductRequestDTO;
 import stockvision.inventory.product.dto.ProductResponseDTO;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/v1/products")
