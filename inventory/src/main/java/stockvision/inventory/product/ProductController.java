@@ -64,4 +64,9 @@ public class ProductController {
     public ResponseEntity<byte[]> getBarcode(@PathVariable Long id) throws WriterException, IOException {
         return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(productService.getBarcode(id));
     }
+
+    @GetMapping(value = "/QrCode/{id}", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getQrCode(@PathVariable Long id) throws WriterException, IOException {
+        return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(productService.getQrCode(id));
+    }
 }

@@ -50,6 +50,7 @@ public class Product {
 
     public String generateTrackingCode() {
         if (trackingCode == null) {
+
             trackingCode = "ORD-" + UUID.randomUUID()
                     .toString()
                     .replace("-", "")

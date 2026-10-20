@@ -105,5 +105,20 @@ public class ProductService {
         return output.toByteArray();
     }
 
+    public byte[] getQrCode(Long id) throws WriterException, IOException {
+        Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado com id: " + id));
+        if(product.getTrackingCode() == null){
+            new NotFoundTrackingCode("Produto não possui código, por favor gere um código");
+        }
+        String trackingCode = product.getTrackingCode();
+
+        BufferedImage image = barcodeService.generateQrCode(trackingCode);
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", output);
+
+        return output.toByteArray();
+    }
+
 
 }
