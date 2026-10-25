@@ -1,6 +1,8 @@
 package stockvision.finance.Financial.exception;
 
 import stockvision.finance.Account.exception.FinancialAccountNotFoundException;
+import stockvision.finance.Category.exception.FinancialCategoryConflictException;
+import stockvision.finance.Category.exception.FinancialCategoryNotFoundException;
 import stockvision.finance.Settlement.exception.FinancialSettlementNotFoundException;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -11,6 +13,16 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class FinancialExceptionHandler {
+    @ExceptionHandler(FinancialCategoryNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleCategoryNotFound(FinancialCategoryNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error(HttpStatus.NOT_FOUND, exception.getMessage()));
+    }
+
+    @ExceptionHandler(FinancialCategoryConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleCategoryConflict(FinancialCategoryConflictException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error(HttpStatus.CONFLICT, exception.getMessage()));
+    }
+
     @ExceptionHandler(FinancialSettlementNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleSettlementNotFound(FinancialSettlementNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error(HttpStatus.NOT_FOUND, exception.getMessage()));

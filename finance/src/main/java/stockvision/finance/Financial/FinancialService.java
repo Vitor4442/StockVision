@@ -6,6 +6,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import stockvision.finance.Category.FinancialCategory;
+import stockvision.finance.Category.FinancialCategoryRepository;
+import stockvision.finance.Category.FinancialCategoryStatus;
+import stockvision.finance.Category.exception.FinancialCategoryConflictException;
+import stockvision.finance.Category.exception.FinancialCategoryNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,14 +27,27 @@ import stockvision.finance.Settlement.FinancialSettlementStatus;
 public class FinancialService {
     private final FinanciaRepository repository;
     private final FinancialSettlementRepository settlementRepository;
+    private final FinancialCategoryRepository categoryRepository;
 
-    public FinancialService(FinanciaRepository repository, FinancialSettlementRepository settlementRepository) {
+    public FinancialService(FinanciaRepository repository, FinancialSettlementRepository settlementRepository,
+            FinancialCategoryRepository categoryRepository) {
         this.repository = repository;
         this.settlementRepository = settlementRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Transactional
     public FinancialEntryResponse create(FinancialType type, FinancialEntryRequest request) {
+        if (request.categoryId() != null) {
+            FinancialCategory category = categoryRepository.findById(request.categoryId())
+                    .orElseThrow(() -> new FinancialCategoryNotFoundException(request.categoryId()));
+            if (category.getDeletedAt() != null || category.getStatus() != FinancialCategoryStatus.ACTIVE) {
+                throw new FinancialCategoryConflictException("Only active financial categories can be assigned.");
+            }
+            if (category.getType() != type) {
+                throw new FinancialCategoryConflictException("Category type must match the financial entry type.");
+            }
+        }
         FinancialEntity entity = new FinancialEntity();
         entity.setType(type);
         entity.setDescription(request.description().trim());

@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface FinanciaRepository extends JpaRepository<FinancialEntity, UUID>, JpaSpecificationExecutor<FinancialEntity> {
+    boolean existsByCategoryId(UUID categoryId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select f from FinancialEntity f where f.id = :id")
     Optional<FinancialEntity> findByIdForUpdate(@Param("id") UUID id);
