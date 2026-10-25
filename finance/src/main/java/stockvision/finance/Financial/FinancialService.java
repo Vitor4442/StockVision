@@ -15,13 +15,17 @@ import stockvision.finance.Financial.dto.FinancialEntryRequest;
 import stockvision.finance.Financial.dto.FinancialEntryResponse;
 import stockvision.finance.Financial.exception.FinancialEntryNotFoundException;
 import stockvision.finance.Financial.exception.FinancialEntryStateException;
+import stockvision.finance.Settlement.FinancialSettlementRepository;
+import stockvision.finance.Settlement.FinancialSettlementStatus;
 
 @Service
 public class FinancialService {
     private final FinanciaRepository repository;
+    private final FinancialSettlementRepository settlementRepository;
 
-    public FinancialService(FinanciaRepository repository) {
+    public FinancialService(FinanciaRepository repository, FinancialSettlementRepository settlementRepository) {
         this.repository = repository;
+        this.settlementRepository = settlementRepository;
     }
 
     @Transactional
@@ -79,10 +83,15 @@ public class FinancialService {
 
     @Transactional
     public FinancialEntryResponse cancel(UUID id) {
-        FinancialEntity entity = getEntry(id);
+        FinancialEntity entity = repository.findByIdForUpdate(id)
+                .orElseThrow(() -> new FinancialEntryNotFoundException(id));
         ensureActive(entity);
         if (entity.getStatus() != FinancialStatus.PENDING) {
             throw new FinancialEntryStateException("Only pending financial entries can be cancelled.");
+        }
+        if (settlementRepository.sumAmountByFinancialEntryIdAndStatus(
+                entity.getId(), FinancialSettlementStatus.CONFIRMED).signum() > 0) {
+            throw new FinancialEntryStateException("Financial entries with confirmed settlements cannot be cancelled.");
         }
         entity.setStatus(FinancialStatus.CANCELLED);
         return FinancialEntryResponse.from(repository.save(entity));
