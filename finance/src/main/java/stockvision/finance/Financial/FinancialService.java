@@ -1,11 +1,17 @@
 package stockvision.finance.Financial;
 
 import jakarta.persistence.criteria.Predicate;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import stockvision.finance.Account.FinancialAccount;
+import stockvision.finance.Account.FinancialAccountRepository;
 import stockvision.finance.Category.FinancialCategory;
 import stockvision.finance.Category.FinancialCategoryRepository;
 import stockvision.finance.Category.FinancialCategoryStatus;
@@ -18,22 +24,68 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import stockvision.finance.Financial.dto.FinancialEntryRequest;
 import stockvision.finance.Financial.dto.FinancialEntryResponse;
+import stockvision.finance.Financial.dto.CompanyBalanceResponse;
+import stockvision.finance.Financial.dto.FinancialAccountBalanceResponse;
+import stockvision.finance.Financial.dto.FinancialCurrencyBalanceResponse;
 import stockvision.finance.Financial.exception.FinancialEntryNotFoundException;
 import stockvision.finance.Financial.exception.FinancialEntryStateException;
 import stockvision.finance.Settlement.FinancialSettlementRepository;
 import stockvision.finance.Settlement.FinancialSettlementStatus;
+import stockvision.finance.Settlement.dto.FinancialSettlementAccountTotal;
 
 @Service
 public class FinancialService {
     private final FinanciaRepository repository;
     private final FinancialSettlementRepository settlementRepository;
     private final FinancialCategoryRepository categoryRepository;
+    private final FinancialAccountRepository accountRepository;
 
     public FinancialService(FinanciaRepository repository, FinancialSettlementRepository settlementRepository,
-            FinancialCategoryRepository categoryRepository) {
+            FinancialCategoryRepository categoryRepository, FinancialAccountRepository accountRepository) {
         this.repository = repository;
         this.settlementRepository = settlementRepository;
         this.categoryRepository = categoryRepository;
+        this.accountRepository = accountRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public CompanyBalanceResponse getCompanyBalance() {
+        Map<UUID, BigDecimal[]> settlementsByAccount = new HashMap<>();
+        for (FinancialSettlementAccountTotal total : settlementRepository.summarizeAmountsByAccountAndEntryType(FinancialSettlementStatus.CONFIRMED)) {
+            BigDecimal[] amounts = settlementsByAccount.computeIfAbsent(total.financialAccountId(),
+                    ignored -> new BigDecimal[] {BigDecimal.ZERO, BigDecimal.ZERO});
+            int index = total.type() == FinancialType.RECEIVABLE ? 0 : 1;
+            amounts[index] = amounts[index].add(total.amount());
+        }
+
+        Map<String, BigDecimal[]> totalsByCurrency = new LinkedHashMap<>();
+        List<FinancialAccountBalanceResponse> accountBalances = accountRepository.findAll().stream()
+                .map(account -> accountBalance(account, settlementsByAccount, totalsByCurrency)).toList();
+
+        List<FinancialCurrencyBalanceResponse> currencyBalances = totalsByCurrency.entrySet().stream()
+                .map(entry -> {
+                    BigDecimal[] totals = entry.getValue();
+                    return new FinancialCurrencyBalanceResponse(entry.getKey(), totals[0], totals[1], totals[2],
+                            totals[0].add(totals[1]).subtract(totals[2]));
+                }).toList();
+        return new CompanyBalanceResponse(currencyBalances, accountBalances);
+    }
+
+    private FinancialAccountBalanceResponse accountBalance(FinancialAccount account,
+            Map<UUID, BigDecimal[]> settlementsByAccount, Map<String, BigDecimal[]> totalsByCurrency) {
+        BigDecimal[] settledAmounts = settlementsByAccount.getOrDefault(account.getId(),
+                new BigDecimal[] {BigDecimal.ZERO, BigDecimal.ZERO});
+        BigDecimal currentBalance = account.getInitialBalance().add(settledAmounts[0]).subtract(settledAmounts[1]);
+
+        BigDecimal[] currencyTotals = totalsByCurrency.computeIfAbsent(account.getCurrency(),
+                ignored -> new BigDecimal[] {BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO});
+        currencyTotals[0] = currencyTotals[0].add(account.getInitialBalance());
+        currencyTotals[1] = currencyTotals[1].add(settledAmounts[0]);
+        currencyTotals[2] = currencyTotals[2].add(settledAmounts[1]);
+
+        return new FinancialAccountBalanceResponse(account.getId(), account.getName(), account.getType(),
+                account.getStatus(), account.getDeletedAt(), account.getCurrency(), account.getInitialBalance(),
+                settledAmounts[0], settledAmounts[1], currentBalance);
     }
 
     @Transactional

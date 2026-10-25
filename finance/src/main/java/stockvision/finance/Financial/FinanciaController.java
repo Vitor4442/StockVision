@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import stockvision.finance.Financial.dto.FinancialEntryRequest;
 import stockvision.finance.Financial.dto.FinancialEntryResponse;
+import stockvision.finance.Financial.dto.CompanyBalanceResponse;
 
 @RestController
 @RequestMapping("/api/financial-entries")
@@ -52,6 +53,11 @@ public class FinanciaController {
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
         return service.findAll(type, status, issueDateFrom, issueDateTo, dueDateFrom, dueDateTo,
                 categoryId, counterpartyId, includeDeleted, pageable);
+    }
+
+    @GetMapping("/balance")
+    public CompanyBalanceResponse getCompanyBalance() {
+        return service.getCompanyBalance();
     }
 
     @GetMapping("/{id}")
