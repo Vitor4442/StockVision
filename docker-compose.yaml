@@ -1,65 +1,147 @@
-version: '3.8'
-
 services:
-  # Banco de dados do Inventory Service
-  inventory-db:
+  postgres:
     image: postgres:16-alpine
-    container_name: inventory-db
+    container_name: stockvision-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-juju2001}
+      POSTGRES_DB: postgres
     ports:
-      - "${DB_PORT}:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - inventory_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d postgres"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  # Microserviço de Inventário
-  inventory-service:
-    build:
-      context: ./inventory-service
-      dockerfile: Dockerfile
-    container_name: inventory-service
-    ports:
-      - "${INVENTORY_SERVICE_PORT}:8081"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-db:5432/${DB_NAME}
-      SPRING_DATASOURCE_USERNAME: ${DB_USER}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-    depends_on:
-      inventory-db:
-        condition: service_healthy
-
-  # Mensageria
   rabbitmq:
     image: rabbitmq:4-management
     container_name: stockvision-rabbitmq
     restart: unless-stopped
-    ports:
-      - "5672:5672"
-      - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: stockvision
-      RABBITMQ_DEFAULT_PASS: stockvision_dev_123
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-stockvision}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-stockvision_dev_123}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
-  # Serviço de email para desenvolvimento (Mailpit)
   mailpit:
-    image: axllent/mailpit
+    image: axllent/mailpit:latest
     container_name: stockvision-mailpit
     restart: unless-stopped
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "${SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
 
+  inventory:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: inventory
+    container_name: stockvision-inventory
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/inventory_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-juju2001}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-stockvision}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-stockvision_dev_123}
+      JWT_PUBLIC_KEY_LOCATION: file:/run/keys/public.pem
+    volumes:
+      - ./inventory/src/main/resources/keys/public.pem:/run/keys/public.pem:ro
+    ports:
+      - "${INVENTORY_PORT:-8081}:8081"
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
 
+  users:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: users
+    container_name: stockvision-users
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8082
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/users_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-juju2001}
+      JWT_PRIVATE_KEY_PATH: /run/keys/private.pem
+      JWT_PUBLIC_KEY_PATH: /run/keys/public.pem
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-stockvision-dev-internal-api-token-2026}
+    volumes:
+      - ./users/keys/private.pem:/run/keys/private.pem:ro
+      - ./users/keys/public.pem:/run/keys/public.pem:ro
+    ports:
+      - "${USERS_PORT:-8082}:8082"
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  notification:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: notification
+    container_name: stockvision-notification
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8083
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-juju2001}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-stockvision}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-stockvision_dev_123}
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      MAIL_FROM: ${MAIL_FROM:-no-reply@stockvision.local}
+      USERS_SERVICE_URL: http://users:8082
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-stockvision-dev-internal-api-token-2026}
+    ports:
+      - "${NOTIFICATION_PORT:-8083}:8083"
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      users: { condition: service_started }
+      mailpit: { condition: service_started }
+
+  finance:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: finance
+    container_name: stockvision-finance
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8084
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/finances_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-juju2001}
+    ports:
+      - "${FINANCE_PORT:-8084}:8084"
+    depends_on:
+      postgres: { condition: service_healthy }
 
 volumes:
-  inventory_data:
+  postgres_data:
   rabbitmq_data:
