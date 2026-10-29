@@ -9,12 +9,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import stockvision.inventory.location.dto.LocationRequest;
 import stockvision.inventory.location.dto.LocationResponse;
+import stockvision.inventory.stock.StockRepository;
+
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
 public class LocationService {
 
     private final LocationRepository locationRepository;
+    private final StockRepository stockRepository;
 
     @Transactional(readOnly = true)
     public Page<LocationResponse> findAll(Pageable pageable) {
@@ -73,6 +77,11 @@ public class LocationService {
         locationRepository.delete(location);
     }
 
+    @Transactional(readOnly = true)
+    public BigDecimal getTotalValueLocal(Long id) {
+        return stockRepository.findTotalByLocationId(id);
+    }
+
     private Location findEntityById(Long id) {
         return locationRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Local não encontrado com o ID: " + id));
@@ -86,4 +95,5 @@ public class LocationService {
                 Boolean.TRUE.equals(location.getActive())
         );
     }
+
 }

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import stockvision.inventory.location.dto.LocationRequest;
 import stockvision.inventory.location.dto.LocationResponse;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/v1/locations")
 @RequiredArgsConstructor
@@ -26,6 +28,11 @@ public class LocationController {
     @GetMapping("/{id}")
     public ResponseEntity<LocationResponse> getLocationById(@PathVariable Long id) {
         return ResponseEntity.ok(locationService.findById(id));
+    }
+
+    @GetMapping("value/{id}")
+    public ResponseEntity<BigDecimal> getTotalValueByLocation (@PathVariable Long id){
+        return ResponseEntity.ok(locationService.getTotalValueLocal(id));
     }
 
     @PostMapping
