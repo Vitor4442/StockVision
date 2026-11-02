@@ -155,6 +155,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/company_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-juju2001}
+      JWT_PUBLIC_KEY_LOCATION: file:/run/keys/public.pem
+    volumes:
+      - ./users/keys/public.pem:/run/keys/public.pem:ro
     ports:
       - "${COMPANY_PORT:-8085}:8085"
     depends_on:
