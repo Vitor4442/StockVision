@@ -142,6 +142,24 @@ services:
     depends_on:
       postgres: { condition: service_healthy }
 
+  company:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE: company
+    container_name: stockvision-company
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: 8085
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/company_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-juju2001}
+    ports:
+      - "${COMPANY_PORT:-8085}:8085"
+    depends_on:
+      postgres: { condition: service_healthy }
+
 volumes:
   postgres_data:
   rabbitmq_data:
