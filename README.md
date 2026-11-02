@@ -1,6 +1,6 @@
 # StockVision
 
-Backend para controle de produtos, locais e saldos de estoque. O repositório reúne três aplicações Spring Boot independentes: inventário, autenticação de usuários e notificações.
+Backend para controle de empresas, produtos, locais e saldos de estoque. O repositório reúne aplicações Spring Boot independentes para empresas, inventário, autenticação, finanças e notificações.
 
 ## Serviços
 
@@ -9,6 +9,7 @@ Backend para controle de produtos, locais e saldos de estoque. O repositório re
 | Inventory Service | `inventory/` | 8081 | Produtos, locais, saldos e movimentações |
 | Users Service | `users/` | 8082 | Cadastro, login e emissão de tokens JWT |
 | Notification Service | `notification/` | 8083 | Consumo de alertas de estoque baixo e envio de e-mails |
+| Company Service | `company/` | 8085 | Cadastro e gerenciamento de empresas |
 
 ## Arquitetura
 
@@ -55,6 +56,7 @@ docker exec stockvision-postgres sh -c 'until pg_isready -U postgres; do sleep 1
 docker exec stockvision-postgres createdb -U postgres inventory_db
 docker exec stockvision-postgres createdb -U postgres users_db
 docker exec stockvision-postgres createdb -U postgres notification_db
+docker exec stockvision-postgres createdb -U postgres company_db
 
 docker run -d --name stockvision-rabbitmq \
   -e RABBITMQ_DEFAULT_USER=stockvision \
@@ -88,6 +90,11 @@ JWT_PUBLIC_KEY_PATH="$(realpath keys/public.pem)" \
 
 ```bash
 cd notification
+SPRING_DATASOURCE_PASSWORD=postgres ./mvnw spring-boot:run
+```
+
+```bash
+cd company
 SPRING_DATASOURCE_PASSWORD=postgres ./mvnw spring-boot:run
 ```
 
@@ -153,12 +160,15 @@ curl -X POST http://localhost:8081/v1/products \
 | Inventory | `POST /v1/stocksMovement/addStock` | Registra entrada |
 | Inventory | `POST /v1/stocksMovement/removeStock` | Registra saída |
 | Inventory | `POST /v1/stocksMovement/adjusted` | Ajusta saldo |
+| Company | `GET /v1/companies` | Consulta os dados da empresa da instalação |
+| Company | `PUT /v1/companies` | Cadastra ou atualiza os dados da empresa da instalação |
 
 O Swagger do Inventory Service está em `http://localhost:8081/swagger-ui/index.html`. As rotas da API exigem autenticação, exceto as rotas públicas de cadastro e login.
 
 ## Estrutura do repositório
 
 ```text
+company/         cadastro e gerenciamento de empresas
 inventory/       API de catálogo e estoque
 users/           autenticação e usuários
 notification/    processamento de alertas e envio de e-mail
