@@ -63,6 +63,12 @@ public class PurchaseOrderItemsService {
             inventoryProductClient.findProductById(productId);
         } catch (FeignException.NotFound exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado: " + productId);
+        } catch (FeignException.Unauthorized exception) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Inventory não autorizou a consulta do produto", exception);
+        } catch (FeignException.Forbidden exception) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Sem permissão para consultar o produto no inventory", exception);
         } catch (FeignException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
                     "Não foi possível validar o produto no serviço de inventory", exception);
