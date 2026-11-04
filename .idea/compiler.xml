@@ -53,6 +53,7 @@
       <module name="finance" options="-parameters" />
       <module name="inventory" options="-parameters" />
       <module name="notification" options="-parameters" />
+      <module name="procurement" options="-parameters" />
       <module name="users" options="-parameters" />
     </option>
   </component>
