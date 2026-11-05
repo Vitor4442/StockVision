@@ -8,14 +8,18 @@ public record PurchaseOrderItemsResponse(
         Long id,
         Long purchaseOrderId,
         Long productId,
-        BigDecimal quantity
+        BigDecimal quantity,
+        BigDecimal unitValue,
+        BigDecimal totalValue
 ) {
     public static PurchaseOrderItemsResponse from(PurhaseOrderItems item) {
         return new PurchaseOrderItemsResponse(
                 item.getId(),
                 item.getPurchaseOrders() == null ? null : item.getPurchaseOrders().getId(),
                 item.getProductId(),
-                item.getQuantity()
+                item.getQuantity(),
+                item.getUnitValue(),
+                item.getTotalValue()
         );
     }
 }

@@ -43,7 +43,6 @@ public class PurchaseOrdersService {
         PurchaseOrders updated = purchaseOrdersMapper.toEntity(request);
         order.setOrderNumber(updated.getOrderNumber());
         order.setStatus(updated.getStatus());
-        order.setSubtotal(updated.getSubtotal());
         order.setDiscount(updated.getDiscount());
         order.setShippingCost(updated.getShippingCost());
         order.setNotes(updated.getNotes());

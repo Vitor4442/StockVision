@@ -13,6 +13,7 @@ import stockvision.procurement.purchase_order_items.mapper.PurchaseOrderItemsMap
 import stockvision.procurement.purchase_orders.PurchaseOrders;
 import stockvision.procurement.purchase_orders.PurchaseOrdersRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -37,30 +38,57 @@ public class PurchaseOrderItemsService {
 
     @Transactional
     public PurchaseOrderItemsResponse create(PurchaseOrderItemsRequest request) {
-        validateProductExists(request.productId());
+        BigDecimal unitValue = getProductPrice(request.productId());
         PurchaseOrders order = getOrderById(request.purchaseOrderId());
         PurhaseOrderItems item = itemsMapper.toEntity(request, order);
-        return itemsMapper.toResponse(itemsRepository.save(item));
+        item.setUnitValue(unitValue);
+        item.setTotalValue(request.quantity().multiply(unitValue));
+        PurhaseOrderItems savedItem = itemsRepository.save(item);
+        recalculateOrderTotals(order);
+        return itemsMapper.toResponse(savedItem);
     }
 
     @Transactional
     public PurchaseOrderItemsResponse update(Long id, PurchaseOrderItemsRequest request) {
         PurhaseOrderItems item = getItemById(id);
-        validateProductExists(request.productId());
-        item.setPurchaseOrders(getOrderById(request.purchaseOrderId()));
+        BigDecimal unitValue = getProductPrice(request.productId());
+        PurchaseOrders previousOrder = item.getPurchaseOrders();
+        PurchaseOrders newOrder = getOrderById(request.purchaseOrderId());
+        item.setPurchaseOrders(newOrder);
         item.setProductId(request.productId());
         item.setQuantity(request.quantity());
-        return itemsMapper.toResponse(itemsRepository.save(item));
+        item.setUnitValue(unitValue);
+        item.setTotalValue(request.quantity().multiply(unitValue));
+        PurhaseOrderItems savedItem = itemsRepository.save(item);
+        if (previousOrder != null && !previousOrder.getId().equals(newOrder.getId())) {
+            recalculateOrderTotals(previousOrder);
+        }
+        recalculateOrderTotals(newOrder);
+        return itemsMapper.toResponse(savedItem);
     }
 
     @Transactional
     public void delete(Long id) {
-        itemsRepository.delete(getItemById(id));
+        PurhaseOrderItems item = getItemById(id);
+        PurchaseOrders order = item.getPurchaseOrders();
+        itemsRepository.delete(item);
+        if (order != null) {
+            recalculateOrderTotals(order);
+        }
     }
 
-    private void validateProductExists(Long productId) {
+    private void recalculateOrderTotals(PurchaseOrders order) {
+        BigDecimal subtotal = itemsRepository.findByPurchaseOrdersId(order.getId()).stream()
+                .map(PurhaseOrderItems::getTotalValue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        order.setSubtotal(subtotal);
+        order.calculateTotalAmount();
+        purchaseOrdersRepository.save(order);
+    }
+
+    private BigDecimal getProductPrice(Long productId) {
         try {
-            inventoryProductClient.findProductById(productId);
+            return inventoryProductClient.findProductById(productId).price();
         } catch (FeignException.NotFound exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado: " + productId);
         } catch (FeignException.Unauthorized exception) {

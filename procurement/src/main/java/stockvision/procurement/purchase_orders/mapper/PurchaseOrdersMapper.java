@@ -14,7 +14,7 @@ public class PurchaseOrdersMapper {
         PurchaseOrders order = new PurchaseOrders();
         order.setOrderNumber(request.orderNumber());
         order.setStatus(request.status());
-        order.setSubtotal(request.subtotal());
+        order.setSubtotal(BigDecimal.ZERO);
         order.setDiscount(request.discount() != null ? request.discount() : BigDecimal.ZERO);
         order.setShippingCost(request.shippingCost() != null ? request.shippingCost() : BigDecimal.ZERO);
         order.setNotes(request.notes());

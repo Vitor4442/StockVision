@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 public record PurchaseOrdersRequest(
         @NotBlank String orderNumber,
         @NotNull PurchaseOrdersStatus status,
-        @NotNull @PositiveOrZero BigDecimal subtotal,
         @PositiveOrZero BigDecimal discount,
         @PositiveOrZero BigDecimal shippingCost,
         String notes,

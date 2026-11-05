@@ -26,4 +26,10 @@ public class PurhaseOrderItems {
     @Column(nullable = false, precision = 38, scale = 2)
     private BigDecimal quantity;
 
+    @Column(name = "unit_value", nullable = false, precision = 38, scale = 2)
+    private BigDecimal unitValue;
+
+    @Column(name = "total_value", nullable = false, precision = 38, scale = 2)
+    private BigDecimal totalValue;
+
 }
