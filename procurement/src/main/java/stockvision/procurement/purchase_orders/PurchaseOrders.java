@@ -63,7 +63,9 @@ public class PurchaseOrders {
         BigDecimal currentDiscount = this.discount != null ? this.discount : BigDecimal.ZERO;
         BigDecimal currentShipping = this.shippingCost != null ? this.shippingCost : BigDecimal.ZERO;
 
-        BigDecimal discountFactor = BigDecimal.ONE.subtract(currentDiscount);
+        BigDecimal discountFactor = BigDecimal.ONE.subtract(
+                currentDiscount.movePointLeft(2)
+        );
 
         this.totalAmount = currentSubtotal.multiply(discountFactor)
                 .add(currentShipping)
