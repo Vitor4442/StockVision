@@ -14,7 +14,6 @@ public record PurchaseOrdersRequest(
         @NotNull @PositiveOrZero BigDecimal subtotal,
         @PositiveOrZero BigDecimal discount,
         @PositiveOrZero BigDecimal shippingCost,
-        @NotNull @PositiveOrZero BigDecimal totalAmount,
         String notes,
         LocalDateTime expectedDeliveryAt,
         LocalDateTime orderedAt

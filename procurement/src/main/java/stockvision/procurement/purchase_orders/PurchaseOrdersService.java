@@ -32,6 +32,7 @@ public class PurchaseOrdersService {
     @Transactional
     public PurchaseOrdersResponse create(PurchaseOrdersRequest request) {
         PurchaseOrders order = purchaseOrdersMapper.toEntity(request);
+        order.calculateTotalAmount();
         order.setCreatedAt(LocalDateTime.now());
         return purchaseOrdersMapper.toResponse(purchaseOrdersRepository.save(order));
     }
@@ -45,11 +46,11 @@ public class PurchaseOrdersService {
         order.setSubtotal(updated.getSubtotal());
         order.setDiscount(updated.getDiscount());
         order.setShippingCost(updated.getShippingCost());
-        order.setTotalAmount(updated.getTotalAmount());
         order.setNotes(updated.getNotes());
         order.setExpectedDeliveryAt(updated.getExpectedDeliveryAt());
         order.setOrderedAt(updated.getOrderedAt());
         order.setUpdatedAt(LocalDateTime.now());
+        order.calculateTotalAmount();
         return purchaseOrdersMapper.toResponse(purchaseOrdersRepository.save(order));
     }
 

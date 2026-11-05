@@ -5,6 +5,7 @@ import lombok.Data;
 import stockvision.procurement.purchase_order_items.PurhaseOrderItems;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,5 +57,17 @@ public class PurchaseOrders {
 
     @OneToMany(mappedBy = "purchaseOrders", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PurhaseOrderItems> items = new ArrayList<>();
+
+    public void calculateTotalAmount() {
+        BigDecimal currentSubtotal = this.subtotal != null ? this.subtotal : BigDecimal.ZERO;
+        BigDecimal currentDiscount = this.discount != null ? this.discount : BigDecimal.ZERO;
+        BigDecimal currentShipping = this.shippingCost != null ? this.shippingCost : BigDecimal.ZERO;
+
+        BigDecimal discountFactor = BigDecimal.ONE.subtract(currentDiscount);
+
+        this.totalAmount = currentSubtotal.multiply(discountFactor)
+                .add(currentShipping)
+                .setScale(2, RoundingMode.HALF_EVEN);
+    }
 
 }
