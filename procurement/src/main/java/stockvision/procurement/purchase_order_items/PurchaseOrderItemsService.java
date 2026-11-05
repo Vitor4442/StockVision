@@ -88,7 +88,7 @@ public class PurchaseOrderItemsService {
 
     private BigDecimal getProductPrice(Long productId) {
         try {
-            return inventoryProductClient.findProductById(productId).price();
+            return inventoryProductClient.findProductById(productId).costPrice();
         } catch (FeignException.NotFound exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado: " + productId);
         } catch (FeignException.Unauthorized exception) {
