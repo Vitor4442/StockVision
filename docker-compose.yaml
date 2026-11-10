@@ -116,6 +116,9 @@ services:
       MAIL_FROM: ${MAIL_FROM:-no-reply@stockvision.local}
       USERS_SERVICE_URL: http://users:8082
       INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-stockvision-dev-internal-api-token-2026}
+      JWT_PUBLIC_KEY_LOCATION: file:/run/keys/public.pem
+    volumes:
+      - ./users/keys/public.pem:/run/keys/public.pem:ro
     ports:
       - "${NOTIFICATION_PORT:-8083}:8083"
     depends_on:
@@ -137,6 +140,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/finances_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-juju2001}
+      JWT_PUBLIC_KEY_LOCATION: file:/run/keys/public.pem
+    volumes:
+      - ./users/keys/public.pem:/run/keys/public.pem:ro
     ports:
       - "${FINANCE_PORT:-8084}:8084"
     depends_on:
