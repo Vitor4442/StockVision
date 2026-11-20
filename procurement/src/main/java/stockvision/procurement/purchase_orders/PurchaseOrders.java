@@ -3,6 +3,7 @@ package stockvision.procurement.purchase_orders;
 import jakarta.persistence.*;
 import lombok.Data;
 import stockvision.procurement.purchase_order_items.PurhaseOrderItems;
+import stockvision.procurement.purchase_orders.event.ProcurementAproveEvent;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -70,6 +71,19 @@ public class PurchaseOrders {
         this.totalAmount = currentSubtotal.multiply(discountFactor)
                 .add(currentShipping)
                 .setScale(2, RoundingMode.HALF_EVEN);
+    }
+
+    public ProcurementAproveEvent toApproveEvent() {
+        return new ProcurementAproveEvent(
+                this.totalAmount,
+                this.notes,
+                this.expectedDeliveryAt,
+                this.orderedAt
+        );
+    }
+
+    public void aprovePurchase (){
+        this.status = PurchaseOrdersStatus.APPROVED;
     }
 
 }
