@@ -1,12 +1,15 @@
 package stockvision.procurement.purchase_orders;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import stockvision.procurement.config.RabbitMQConfig;
 import stockvision.procurement.purchase_orders.dto.PurchaseOrdersRequest;
 import stockvision.procurement.purchase_orders.dto.PurchaseOrdersResponse;
+import stockvision.procurement.purchase_orders.event.ProcurementAproveEvent;
 import stockvision.procurement.purchase_orders.mapper.PurchaseOrdersMapper;
 
 import java.time.LocalDateTime;
@@ -18,6 +21,7 @@ public class PurchaseOrdersService {
 
     private final PurchaseOrdersRepository purchaseOrdersRepository;
     private final PurchaseOrdersMapper purchaseOrdersMapper;
+    private final RabbitTemplate rabbitTemplate;
 
     @Transactional(readOnly = true)
     public List<PurchaseOrdersResponse> findAll() {
@@ -35,6 +39,22 @@ public class PurchaseOrdersService {
         order.calculateTotalAmount();
         order.setCreatedAt(LocalDateTime.now());
         return purchaseOrdersMapper.toResponse(purchaseOrdersRepository.save(order));
+    }
+
+    @Transactional
+    public void approvePurchaseOrders(Long id) {
+
+        PurchaseOrders entity = getEntityById(id);
+
+        entity.aprovePurchase();
+
+        ProcurementAproveEvent event = entity.toApproveEvent();
+
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfig.EXCHANGE,
+                RabbitMQConfig.PROCUREMENTS_APPROVE_ROUTING_KEY,
+                event
+        );
     }
 
     @Transactional

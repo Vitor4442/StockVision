@@ -32,6 +32,12 @@ public class PurchaseOrdersController {
         return ResponseEntity.status(HttpStatus.CREATED).body(purchaseOrdersService.create(request));
     }
 
+    @PatchMapping("/{id}/approve-purchase")
+    public ResponseEntity<Void> approvePurchase(@PathVariable Long id){
+        purchaseOrdersService.approvePurchaseOrders(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<PurchaseOrdersResponse> update(@PathVariable Long id,
                                                           @RequestBody @Valid PurchaseOrdersRequest request) {
