@@ -27,6 +27,7 @@ import stockvision.finance.Financial.dto.FinancialEntryResponse;
 import stockvision.finance.Financial.dto.CompanyBalanceResponse;
 import stockvision.finance.Financial.dto.FinancialAccountBalanceResponse;
 import stockvision.finance.Financial.dto.FinancialCurrencyBalanceResponse;
+import stockvision.finance.Financial.events.ProcumentCreate;
 import stockvision.finance.Financial.exception.FinancialEntryNotFoundException;
 import stockvision.finance.Financial.exception.FinancialEntryStateException;
 import stockvision.finance.Settlement.FinancialSettlementRepository;
@@ -183,6 +184,30 @@ public class FinancialService {
         }
         entity.setDeletedAt(null);
         return FinancialEntryResponse.from(repository.save(entity));
+    }
+
+    @Transactional
+    public void createByProcumentEvent(ProcumentCreate event) {
+
+        FinancialEntity entity = new FinancialEntity();
+
+        entity.setType(FinancialType.PAYABLE);
+        entity.setDescription(event.notes() != null
+                ? event.notes()
+                : "Pedido de compra");
+
+        entity.setAmount(event.totalAmount());
+        entity.setIssueDate(event.orderedAt() != null
+                ? event.orderedAt().toLocalDate()
+                : LocalDate.now());
+
+        entity.setDueDate(event.expectedDeliveryAt() != null
+                ? event.expectedDeliveryAt().toLocalDate()
+                : null);
+
+        entity.setStatus(FinancialStatus.PENDING);
+
+        repository.save(entity);
     }
 
     private FinancialEntity getEntry(UUID id) {
